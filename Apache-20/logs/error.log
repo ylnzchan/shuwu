@@ -1,0 +1,10 @@
+Installing the Apache_pn service
+The Apache_pn service is successfully installed.
+Starting the Apache_pn service
+The Apache_pn service is running.
+] Apache/2.0.63 (Win32) PHP/5.2.14 configured -- resuming normal operations
+[Wed Aug 07 14:15:10 2024] [notice] Server built: Jan 17 2008 22:58:29
+[Wed Aug 07 14:15:12 2024] [notice] Parent: Created child process 7460
+[Wed Aug 07 14:15:12 2024] [notice] Child 7460: Child process is running
+[Wed Aug 07 14:15:12 2024] [notice] Child 7460: Acquired the start mutex.
+[Wed Aug 07 14:15:12 2024] [notice] Child 7460: Starting 1024 worker threads.
