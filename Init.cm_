@@ -1,0 +1,276 @@
+@echo off
+
+rem -- http://phpnow.org
+rem -- YinzCN_at_Gmail.com
+
+setlocal enableextensions
+call Pn\config.cmd
+if "%php%"=="" exit /b
+
+if not "%1"=="" (
+  call :%1 %1
+  goto :eof
+)
+
+prompt -$g
+title 初始化 PHPnow %pn_ver% - Apache %htd_ver% + PHP + MySQL %myd_ver%
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo  ^|     #####  PHPnow.org  -  绿色免费的 PHP 环境套件  #####     ^|
+echo  ^|______________________________________________________________^|
+echo.
+
+if not exist %Sys32%\tasklist.exe goto init
+if not exist %Sys32%\netstat.exe goto init
+
+:chk_htd_port
+%php% "chk_port('%htd_port%');" && goto chk_myd_port
+echo.
+echo     1 - Apache(http) 使用其他端口(不推荐)
+echo     2 - 重试 (端口已被释放 或 程序已退出)
+echo.
+set input=
+set /p input=-^> 请选择: 
+if "%input%"=="1" (
+  call PnCp.cmd chg_port noRestart
+  call Pn\config.cmd
+  goto chk_htd_port
+)
+goto chk_htd_port
+
+:chk_myd_port
+%php% "chk_port('%myd_port%');" && goto init
+echo.
+echo     1 - MySQL 使用其他端口(不推荐)
+echo     2 - 重试 (端口已被释放 或 程序已退出)
+echo.
+:L_02
+set input=
+set /p input=-^> 请选择: 
+if "%input%"=="1" goto L_01
+if "%input%"=="2" goto chk_myd_port
+goto L_02
+:L_01
+set nport=
+set /p nport=-^> 输入新端口(1-65535): 
+if "%nport%"=="" goto L_01
+if "%nport%"=="%htd_port%" goto L_01
+%php% "$p = '%nport%'; if ($p !== ''.ceil($p) || 1 > $p || $p > 65535) exit(1);" || goto L_01
+set myd_port=%nport%
+%php% "frpl('Pn/Config.cmd', '^(set myd_port=)\d+(\r\n)', '${1}%myd_port%$2');"
+if exist %myd_dir%\my.ini %php% "frpl('%myd_dir%\my.ini', '^(port\s*=)\s*\d+', '$1 %myd_port%');"
+goto chk_myd_port
+
+:init
+%php% if (file_exists($php_ini)) cfg_bak('backup {初始化之前的备份}');
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo  ^|    开始文件处理 ...                                          ^|
+echo.
+
+rem 建立目录
+if not exist %htd_dir%\conf\extra md %htd_dir%\conf\extra
+if not exist %htd_dir%\logs md %htd_dir%\logs
+
+if %htd_ver%==2.0 goto htd_20
+if %htd_ver%==2.2 goto htd_22
+goto end
+
+:htd_20
+rem 配置 Apache 2.0
+set tmp=%htd_dir%\conf\magic
+if not exist %tmp% copy %tmp%.default %tmp% /y
+set tmp=%htd_dir%\conf\mime.types
+if not exist %tmp% copy %tmp%.default %tmp% /y
+
+copy Pn\conf.default\httpd-2_0.conf %htd_dir%\conf\httpd.conf
+%php% "chg_port('%htd_port%');" || %pause% && goto end
+%php% "frpl('%htd_dir%\conf\httpd.conf', '@phpdir@', '%php_dir%');
+
+goto copy_files
+
+:htd_22
+rem 配置 Apache 2.2
+if not exist %htd_dir%\conf\magic copy %htd_dir%\conf\original\magic %htd_dir%\conf /y
+if not exist %htd_dir%\conf\mime.types copy %htd_dir%\conf\original\mime.types %htd_dir%\conf /y
+
+copy Pn\conf.default\httpd-2_2.conf %htd_dir%\conf\httpd.conf
+%php% "chg_port('%htd_port%');" || %pause% && goto end
+%php% "frpl('%htd_dir%\conf\httpd.conf', '@phpdir@', '%php_dir%');
+copy Pn\conf.default\httpd-autoindex.conf %htd_dir%\conf\extra /y
+
+:copy_files
+if not exist %vhs_cfg% copy Pn\conf.default\httpd-vhosts.conf %vhs_cfg%
+if not exist htdocs\index.php copy Pn\index.ph_ htdocs\index.php /y
+
+rem 复制 DLL
+if %myd_ver%==5.0 (
+  rem MySQL 5.0
+) else (
+  rem MySQL 5.1
+  copy Pn\php_mysql-for-MySQL-5.1.dll %php_dir%\ext\php_mysql.dll
+)
+copy %myd_dir%\bin\libmySQL.dll %php_dir% /y
+copy %php_dir%\libmySQL.dll %htd_dir%\bin /y
+copy %php_dir%\php5ts.dll %htd_dir%\bin /y
+copy %php_dir%\libeay32.dll %htd_dir%\bin /y
+copy %php_dir%\ssleay32.dll %htd_dir%\bin /y
+%php% "if(PHP_VERSION_ID < 50300) exit(1);" && goto endcpfiles
+copy %php_dir%\libmhash.dll %htd_dir%\bin /y
+copy %php_dir%\libmcrypt.dll %htd_dir%\bin /y
+:endcpfiles
+
+rem 配置 PHP
+%php% "require_once './Pn/Init.php'; init_phpini();"
+
+rem 配置 phpMyAdmin
+set pma=htdocs\phpMyAdmin
+%php% "cp('%pma%\config.sample.inc.php', '%pma%\config.inc.php');"
+%php% "frpl('%pma%/config.inc.php', '\$cfg\[\'blowfish_secret\'\] = \'[^\']*\';', '$cfg[\'blowfish_secret\'] = \'PHPnow-'.md5(time().'-'.mt_rand(0, mt_getrandmax())).'\';');"
+%php% "frpl('%pma%/config.inc.php', '\n', `\r\n`);
+
+rem 配置 MySQL
+if %myd_ver%==5.0 (
+  copy Pn\conf.default\my-5_0.ini %myd_dir%\my.ini /y
+) else (
+  copy Pn\conf.default\my-5_1.ini %myd_dir%\my.ini /y
+)
+if not exist "%myd_dir%\data\test" mkdir "%myd_dir%\data\test"
+%php% "frpl('%myd_dir%\my.ini', '^(port\s*=)\s*\d+', '$1 %myd_port%');"
+
+echo.
+echo  ^|    文件处理完成;                                             ^|
+echo  ^|______________________________________________________________^|
+echo.
+if "%1"=="init" goto :eof
+
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo  ^|    正在安装 Apache ...                                       ^|
+echo.
+cd %htd_dir%
+bin\%htd_exe% -k install -n %htd_svc%
+
+if errorlevel 2 (
+  echo.
+  echo  ^|    安装服务 [ %htd_svc% ] 失败. 可能原因如下:                ^|
+  echo  ^|    1. 服务名已存在, 请卸载或使用不同的服务名.                ^|
+  echo  ^|    2. 非管理员权限, 不能操作 Windows NT 服务.                ^|
+  echo  ^|______________________________________________________________^|
+  echo.
+  cd ..
+  %pause%
+  goto end
+)
+
+if errorlevel 1 (
+  echo.
+  echo  ^|    安装 Apache 服务失败!                                     ^|
+  echo  ^|    上面出现的信息可用于分析其原因.                           ^|
+  echo  ^|______________________________________________________________^|
+  echo.
+  bin\%htd_exe% -k uninstall -n %htd_svc%
+  cd ..
+  %pause%
+  goto end
+)
+
+echo.
+echo  ^|    正在启动 Apache ...                                       ^|
+
+bin\%htd_exe% -k start -n %htd_svc% && goto apache_done
+cd ..
+echo  ^|    Apache 启动失败!                                          ^|
+echo  ^|    上面出现的信息可用于分析其原因.                           ^|
+echo  ^|______________________________________________________________^|
+echo.
+%pause%
+goto end
+
+:apache_done
+cd ..
+if exist %PnCmds%\*.cm_ ren %PnCmds%\*.cm_ *.cmd
+echo.
+echo  ^|    启动 Apache 完成;                                         ^|
+echo  ^|______________________________________________________________^|
+echo.
+
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo  ^|    正在启动 MySQL %myd_ver% ...                                    ^|
+echo.
+
+%net% stop %myd_svc%>nul 2>nul
+%myd_dir%\bin\%myd_exe% --remove %myd_svc%>nul 2>nul
+
+%myd_dir%\bin\%myd_exe% --install %myd_svc% --defaults-file="%CD%\%myd_dir%\my.ini"
+%net% start %myd_svc% || %pause% && goto end
+
+echo  ^|    启动 MySQL %myd_ver% 完成;                                      ^|
+echo  ^|______________________________________________________________^|
+echo.
+
+rem 测试 MySQL
+%php% "chk_mysql('%myd_port%', 'toor');" && goto mysql_setpwd
+
+if %errorlevel%==1045 (
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo        MySQL root 初始密码不正确. 进行 MySQL root 密码复位.
+echo  ^|______________________________________________________________^|
+echo.
+if exist PnCp.cmd call PnCp.cmd reset_mydpwd && goto done
+if exist %PnCmds%\PnCp.cmd call %PnCmds%\PnCp.cmd reset_mydpwd && goto done
+)
+
+if %errorlevel%==2003 (
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo        MySQL^(port:%myd_port%^) 连接失败.
+echo        可能 MySQL 没有启动成功. 或者受防火墙限制.
+echo  ^|______________________________________________________________^|
+echo.
+)
+
+goto done
+
+rem 修改 MySQL root 密码
+:mysql_setpwd
+
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo  ^|    现在为 MySQL 的 root 用户设置密码. 重要! 请切记!          ^|
+echo  ^|______________________________________________________________^|
+
+set /p my_newpwd= -^> 设置 root 用户密码: 
+echo.
+
+if "%my_newpwd%"=="" goto mysql_setpwd
+
+%myd_dir%\bin\mysqladmin.exe -uroot -ptoor password "%my_newpwd%"
+
+if errorlevel 1 %pause% && goto done
+
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo        MySQL root 用户的新密码为 "%my_newpwd%" , 请切记!
+echo  ^|______________________________________________________________^|
+echo.
+
+:done
+title 全部完成 - PHPnow.org
+echo   ______________________________________________________________
+echo  ^|                                                              ^|
+echo  ^|    全部完成!!  你将可以看到 PHPnow 的默认页面!               ^|
+echo  ^|______________________________________________________________^|
+echo.
+%pause%
+echo.
+%php% cfg_bak('backup [初始配置]');
+title %ComSpec%
+
+start http://127.0.0.1:%htd_port%
+if exist Init.cmd PnCp.cmd exec ren Init.cmd *.cm_
+
+:end
+prompt

@@ -1,0 +1,123 @@
+
+  http://www.phpnow.org
+
+
+  PHPnow 1.5.6-1  -  2010-09-25
+    * 打包修正
+
+
+  PHPnow 1.5.6  -  2010-09-22
+
+    组件更新:
+      php-5.2.14
+      Apache 2.2.16
+      MySQL-5.0.90 / MySQL-5.1.50
+      phpMyAdmin 3.3.7
+      eAccelerator 0.9.6-1
+    ...
+
+
+  PHPnow 1.5.5  -  2010-01-28
+
+    组件更新:
+      php-5.2.12
+      Apache 2.2.14
+      MySQL-5.0.89 / MySQL-5.1.42
+      phpMyAdmin 3.2.5
+      eAccelerator 0.9.6-svn379
+    * 修正端口被占用时，更改功能失效
+    * 默认关闭 InnoDB 引擎，若要使用，请去除 my.ini 中的 skip-innodb 一行
+    ...
+
+
+  PHPnow 1.5.4  -  2009-07-02
+
+    组件更新:
+      php-5.2.10
+      MySQL-5.0.83 / MySQL-5.1.36
+      phpMyAdmin 3.2.0.1
+      ...
+
+
+  PHPnow 1.5.3  -  2009-04-16
+
+    组件更新:
+      php-5.2.9-2
+      MySQL-5.1.33
+      phpMyAdmin 3.1.3.1
+    * MySQL 默认字符集(default-character-set)设为 utf8
+    * 部分小修正
+    ...
+
+
+  PHPnow 1.5.1  -  2009-02-18
+
+    * 修正 PnCp.cmd 里写反的 /i not
+    * 取消 MySQL 日志, 不再产生迅速变大的 .000 .001 等文件(仅 MySQL 5.0)
+    * 修正 PnCp.cmd "9 - 关闭 Apache 日志" 不可用
+    * 修正 PnCp.cmd "17 - 设置 error_reporting" 不可用
+    ...
+
+    组件更新:
+      MySQL-5.0.77
+
+
+  PHPnow 1.5.0  -  2009-02-06
+
+    * 解决非默认目录不能使用 .htaccess 文件配置 Rewrite
+    * 解决使用 "记事本" 编辑配置文件后会出错的问题
+    * 本地化 Path 环境变量, 进一步脱离对系统的依赖
+    * PnCp 虚拟主机列表显示主机目录路径
+    * 默认 404 错误页指向网站根目录下的 "/404.html"
+    Add: 虚拟主机 可分别设置开启或取消 目录索引, 位于 PnCp 菜单 "2 - vhs 修改 虚拟主机"
+    Add: 新增 "18 - 配置文件 备份 / 还原", 可备份或还原 Apache, php, MySQL 的配置文件
+    * 归为一个包, 不再分开 20 和 22 版, 通过 Setup.cmd 选择所需 Apache 和 MySQL 版本
+    ...
+
+    组件更新:
+      php-5.2.8
+      phpMyAdmin 3.1.2
+
+      MySQL-5.0.67
+      MySQL-5.1.31
+      Apache 2.2.11
+
+
+  PHPnow 1.4.5  -  2008-05-16
+
+    * 不再自动覆盖 index.php
+    * 同时发布 Apache 2.2 和 2.0 两个不同版本, 简写为 20 和 22
+    * 初始化时若端口被占用, 可直接修改
+    * session.save_path 改为 C:\WINDOWS\Temp
+
+    组件更新:
+      php-5.2.6
+      MySQL-5.0.51b
+      phpMyAdmin 2.11.6
+      eAccelerator 0.9.5.3
+
+    默认 php 扩展增加了 3 个
+      php_curl.dll
+      php_sockets.dll
+      php_xmlrpc.dll
+
+
+  PHPnow 1.4.4  -  2008-02-08
+
+    * 初始化时使用新方法检测端口
+    * 提高初始化时 MySQL 检测和设置密码的成功率
+    * 更新默认页(index.php), 增加获取 服务器 IP 功能
+
+    组件更新:
+      MySQL-5.0.51a
+
+
+  PHPnow 1.4.3  -  2008-01-23
+
+    * 修正自定义网站目录功能
+    * 修正 转移到另一个系统 中不能使用的问题
+    * phpMyAdmin 使用了 Yinz 进一步翻译的中文语言文件
+
+    组件更新:
+      Apache 2.2.8
+      phpMyAdmin 2.11.4

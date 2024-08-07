@@ -1,0 +1,25 @@
+
+  重要提示：升级前请一定要做好备份！请把此说明看懂再进行升级。
+
+
+  1. 停止原来的 Apache 和 MySQL (Stop.cmd)
+
+  2. 将原来的 PHPnow 目录 移动 或 改名。例如 D:\PHPnow 改为 D:\PHPnow2
+
+  3. 安装好新的 PHPnow
+
+  4. 停止新装的 PHPnow (Stop.cmd)
+
+  5. 从原来的目录中(例如 D:\PHPnow2)，复制下列内容到新目录的对应位置(覆盖)
+      .\MySQL-5.0.xx\data
+      .\Apache\conf\extra\httpd-vhosts.conf
+      .\vhosts
+      .\htdocs
+     如果你还有其他需要，可以根据自己情况处理。
+     如果含有代理虚拟主机，请手动任意添加一个，然后可以删除新加的这个，
+     才可使用。目的是激活 代理 模块。否则会得到错误信息。
+
+  6. 启动服务 (Start.cmd)
+
+  7. 启动 MySQL 后，执行 PnCp.cmd 选 15 (升级 MySQL 数据库)，
+     输入你的 root 密码，结果全是 OK 即顺利完成。
